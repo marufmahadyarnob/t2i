@@ -2,7 +2,9 @@ const imageInput = document.getElementById("imageInput");
 const textCode = document.getElementById("textCode");
 const preview = document.getElementById("preview");
 
-// Image ➜ Text
+/* ---------------------------
+   Image ➜ Text
+---------------------------- */
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
   if (!file) return;
@@ -15,36 +17,51 @@ imageInput.addEventListener("change", () => {
   reader.readAsDataURL(file);
 });
 
-// Text ➜ Image (Preview)
+/* ---------------------------
+   Text ➜ Image (Preview)
+---------------------------- */
 function renderFromText() {
-  const value = textCode.value.trim();
-  if (!value.startsWith("data:image")) {
+  const raw = textCode.value;
+  const cleaned = raw.replace(/\s+/g, "");
+
+  if (!cleaned.includes("data:image")) {
     alert("Invalid image code!");
     return;
   }
-  preview.src = value;
+
+  preview.src = cleaned;
 }
 
-// Auto preview when pasting text
+/* ---------------------------
+   Auto preview on paste/type
+---------------------------- */
 textCode.addEventListener("input", () => {
-  const value = textCode.value.trim();
-  if (value.startsWith("data:image")) {
-    preview.src = value;
+  const cleaned = textCode.value.replace(/\s+/g, "");
+  if (cleaned.includes("data:image")) {
+    preview.src = cleaned;
   }
 });
 
-// Save image
+/* ---------------------------
+   Save Image
+---------------------------- */
 function downloadImage() {
-  if (!preview.src) {
+  if (!preview.src || !preview.src.includes("data:image")) {
     alert("No image to save!");
     return;
   }
+
   const a = document.createElement("a");
   a.href = preview.src;
   a.download = "image.png";
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 }
 
+/* ---------------------------
+   Utility buttons
+---------------------------- */
 function copyAll() {
   textCode.select();
   document.execCommand("copy");
