@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Image ⇄ Text Converter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h1>Image ⇄ Text Converter</h1>
+  <p class="subtitle">Convert image to reversible text code and back</p>
+
+  <div class="section">
+    <h2>Image ➜ Text</h2>
+    <input type="file" id="imageInput" accept="image/*">
+  </div>
+
+  <div class="section">
+    <h2>Text Code</h2>
+    <textarea id="textCode" placeholder="Image code will appear here..."></textarea>
+
+    <div class="buttons">
+      <button onclick="selectAll()">Select All</button>
+      <button onclick="copyAll()">Copy All</button>
+      <button onclick="clearAll()">Clear</button>
+      <button class="primary" onclick="textToImage()">Text ➜ Image</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Image Preview</h2>
+    <div class="preview-box">
+      <img id="preview" alt="Preview">
+    </div>
+  </div>
+
+  <p class="footer">100% Client-side • No backend • GitHub Pages ready</p>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
