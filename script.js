@@ -10,7 +10,7 @@ const TARGET_CHARS = 18000;
 const MAX_WIDTH = 600;
 const MIN_QUALITY = 0.1;
 
-// Update quality label
+// Update slider label dynamically
 qualitySlider.addEventListener("input", () => {
   qualityValue.textContent = qualitySlider.value + "%";
 });
@@ -29,18 +29,16 @@ imageInput.addEventListener("change", () => {
   img.onload = () => {
     const scale = Math.min(1, MAX_WIDTH / img.width);
     const canvas = document.createElement("canvas");
-
     canvas.width = Math.round(img.width * scale);
     canvas.height = Math.round(img.height * scale);
 
     const ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    // Start with slider quality
+    // Use slider value
     let quality = qualitySlider.value / 100;
     let dataURL = "";
 
-    // Auto-adjust to fit target char size
     while (quality >= MIN_QUALITY) {
       dataURL = canvas.toDataURL("image/webp", quality);
       if (dataURL.length <= TARGET_CHARS + 2000) break;
@@ -56,6 +54,7 @@ imageInput.addEventListener("change", () => {
 // Text → Image
 function renderFromText() {
   const cleaned = textCode.value.replace(/\s+/g, "");
+  charCount.textContent = textCode.value.length;
   if (!cleaned.includes("data:image")) {
     alert("Invalid image code!");
     return;
@@ -63,7 +62,7 @@ function renderFromText() {
   preview.src = cleaned;
 }
 
-// Auto preview + char count
+// Auto preview + char count update
 textCode.addEventListener("input", () => {
   const cleaned = textCode.value.replace(/\s+/g, "");
   charCount.textContent = textCode.value.length;
