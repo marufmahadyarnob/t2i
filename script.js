@@ -1,67 +1,90 @@
 const imageInput = document.getElementById("imageInput");
 const textCode = document.getElementById("textCode");
 const preview = document.getElementById("preview");
+const qualitySlider = document.getElementById("qualitySlider");
+const qualityValue = document.getElementById("qualityValue");
+const charCount = document.getElementById("charCount");
 
-/* ---------------------------
-   Image ➜ Text
----------------------------- */
+// TARGET SETTINGS
+const TARGET_CHARS = 18000;
+const MAX_WIDTH = 600;
+const MIN_QUALITY = 0.1;
+
+// Update quality label
+qualitySlider.addEventListener("input", () => {
+  qualityValue.textContent = qualitySlider.value + "%";
+});
+
+// Image → Compressed Text
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
   if (!file) return;
 
+  const img = new Image();
   const reader = new FileReader();
-  reader.onload = () => {
-    textCode.value = reader.result;
-    preview.src = reader.result;
-  };
+
+  reader.onload = () => img.src = reader.result;
   reader.readAsDataURL(file);
+
+  img.onload = () => {
+    const scale = Math.min(1, MAX_WIDTH / img.width);
+    const canvas = document.createElement("canvas");
+
+    canvas.width = Math.round(img.width * scale);
+    canvas.height = Math.round(img.height * scale);
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Start with slider quality
+    let quality = qualitySlider.value / 100;
+    let dataURL = "";
+
+    // Auto-adjust to fit target char size
+    while (quality >= MIN_QUALITY) {
+      dataURL = canvas.toDataURL("image/webp", quality);
+      if (dataURL.length <= TARGET_CHARS + 2000) break;
+      quality -= 0.05;
+    }
+
+    textCode.value = dataURL;
+    preview.src = dataURL;
+    charCount.textContent = dataURL.length;
+  };
 });
 
-/* ---------------------------
-   Text ➜ Image (Preview)
----------------------------- */
+// Text → Image
 function renderFromText() {
-  const raw = textCode.value;
-  const cleaned = raw.replace(/\s+/g, "");
-
+  const cleaned = textCode.value.replace(/\s+/g, "");
   if (!cleaned.includes("data:image")) {
     alert("Invalid image code!");
     return;
   }
-
   preview.src = cleaned;
 }
 
-/* ---------------------------
-   Auto preview on paste/type
----------------------------- */
+// Auto preview + char count
 textCode.addEventListener("input", () => {
   const cleaned = textCode.value.replace(/\s+/g, "");
+  charCount.textContent = textCode.value.length;
   if (cleaned.includes("data:image")) {
     preview.src = cleaned;
   }
 });
 
-/* ---------------------------
-   Save Image
----------------------------- */
+// Save Image
 function downloadImage() {
-  if (!preview.src || !preview.src.includes("data:image")) {
+  if (!preview.src) {
     alert("No image to save!");
     return;
   }
-
   const a = document.createElement("a");
   a.href = preview.src;
-  a.download = "image.png";
-  document.body.appendChild(a);
+  a.download = "image.webp";
   a.click();
-  document.body.removeChild(a);
 }
 
-/* ---------------------------
-   Utility buttons
----------------------------- */
+// Utilities
 function copyAll() {
   textCode.select();
   document.execCommand("copy");
@@ -75,4 +98,5 @@ function clearAll() {
   textCode.value = "";
   preview.src = "";
   imageInput.value = "";
+  charCount.textContent = 0;
 }
