@@ -5,17 +5,23 @@ const qualitySlider = document.getElementById("qualitySlider");
 const qualityValue = document.getElementById("qualityValue");
 const charCount = document.getElementById("charCount");
 
-// TARGET SETTINGS
-const TARGET_CHARS = 18000;
 const MAX_WIDTH = 600;
-const MIN_QUALITY = 0.1;
 
-// Update slider label dynamically
+let originalCanvas = null; // store resized canvas
+
+/* -----------------------------
+   Update quality label
+------------------------------ */
 qualitySlider.addEventListener("input", () => {
   qualityValue.textContent = qualitySlider.value + "%";
+  if (originalCanvas) {
+    generateFromCanvas();
+  }
 });
 
-// Image → Compressed Text
+/* -----------------------------
+   Image Upload
+------------------------------ */
 imageInput.addEventListener("change", () => {
   const file = imageInput.files[0];
   if (!file) return;
@@ -28,6 +34,7 @@ imageInput.addEventListener("change", () => {
 
   img.onload = () => {
     const scale = Math.min(1, MAX_WIDTH / img.width);
+
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(img.width * scale);
     canvas.height = Math.round(img.height * scale);
@@ -35,43 +42,51 @@ imageInput.addEventListener("change", () => {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    // Use slider value
-    let quality = qualitySlider.value / 100;
-    let dataURL = "";
-
-    while (quality >= MIN_QUALITY) {
-      dataURL = canvas.toDataURL("image/webp", quality);
-      if (dataURL.length <= TARGET_CHARS + 2000) break;
-      quality -= 0.05;
-    }
-
-    textCode.value = dataURL;
-    preview.src = dataURL;
-    charCount.textContent = dataURL.length;
+    originalCanvas = canvas;
+    generateFromCanvas();
   };
 });
 
-// Text → Image
+/* -----------------------------
+   Generate Base64 from Canvas
+------------------------------ */
+function generateFromCanvas() {
+  const quality = qualitySlider.value / 100;
+  const dataURL = originalCanvas.toDataURL("image/webp", quality);
+
+  textCode.value = dataURL;
+  preview.src = dataURL;
+  charCount.textContent = dataURL.length;
+}
+
+/* -----------------------------
+   Text → Image
+------------------------------ */
 function renderFromText() {
   const cleaned = textCode.value.replace(/\s+/g, "");
-  charCount.textContent = textCode.value.length;
   if (!cleaned.includes("data:image")) {
     alert("Invalid image code!");
     return;
   }
   preview.src = cleaned;
+  charCount.textContent = cleaned.length;
 }
 
-// Auto preview + char count update
+/* -----------------------------
+   Live preview while typing
+------------------------------ */
 textCode.addEventListener("input", () => {
   const cleaned = textCode.value.replace(/\s+/g, "");
-  charCount.textContent = textCode.value.length;
+  charCount.textContent = cleaned.length;
+
   if (cleaned.includes("data:image")) {
     preview.src = cleaned;
   }
 });
 
-// Save Image
+/* -----------------------------
+   Save Image
+------------------------------ */
 function downloadImage() {
   if (!preview.src) {
     alert("No image to save!");
@@ -83,7 +98,9 @@ function downloadImage() {
   a.click();
 }
 
-// Utilities
+/* -----------------------------
+   Utilities
+------------------------------ */
 function copyAll() {
   textCode.select();
   document.execCommand("copy");
@@ -98,4 +115,5 @@ function clearAll() {
   preview.src = "";
   imageInput.value = "";
   charCount.textContent = 0;
+  originalCanvas = null;
 }
